@@ -1,0 +1,6 @@
+requests
+lxml
+pandas
+pyproj
+xlrd
+fhir.resources
