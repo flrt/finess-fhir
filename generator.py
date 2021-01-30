@@ -13,7 +13,6 @@ from fhir.resources.address import Address
 from fhir.resources.contactpoint import ContactPoint
 from fhir.resources.location import Location
 
-
 FINESS_KEYS = [
     "structureet",
     "nofinesset",
@@ -59,9 +58,10 @@ GEOFINESS_KEYS = [
 
 pp = pprint.PrettyPrinter()
 
+
 # https://www.data.gouv.fr/fr/datasets/finess-extraction-du-fichier-des-etablissements/
 
-class etab:
+class Etab:
     def __init__(self):
         self.logger = logging.getLogger()
         self.df_finess = []
@@ -131,11 +131,12 @@ class etab:
             index_col=False,
         )
 
-    def convert_coordinates(self, xin, yin, proj):
+    @staticmethod
+    def convert_coordinates(xin, yin, proj):
         if proj == "LAMBERT_93":
-            inProj = Proj(init="epsg:2154")
-            outProj = Proj(init="epsg:4326")
-            xout, yout = transform(inProj, outProj, xin, yin)
+            in_proj = Proj(init="epsg:2154")
+            out_proj = Proj(init="epsg:4326")
+            xout, yout = transform(in_proj, out_proj, xin, yin)
         else:
             xout, yout = xin, yin
         return xout, yout
@@ -231,8 +232,8 @@ class etab:
 
                 res = re.match(r"(\d+)\s(.*)", row.ligneacheminement)
                 if res:
-                    postalCode, city = res.groups()
-                    data["address"][0]["postalCode"] = postalCode
+                    postal_code, city = res.groups()
+                    data["address"][0]["postalCode"] = postal_code
                     data["address"][0]["city"] = city
 
                 if str(row.telephone) != "nan":
@@ -299,9 +300,9 @@ class etab:
                         )],
                     "identifier": [dict(
                         use="official",
-                        type={"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-                                          "code": "FINEG",
-                                          "display": "FINESS d'entité géographique"}]},
+                        type=dict(coding=[dict(system="http://terminology.hl7.org/CodeSystem/v2-0203",
+                                               code="FINEG",
+                                               display="FINESS d'entité géographique")]),
                         system="urn:oid:1.2.250.1.71.4.2.2",
                         value=row['nofinesset'])
                     ],
@@ -335,7 +336,7 @@ class etab:
                         status="generated",
                         div=f"""<div xmlns=\"http://www.w3.org/1999/xhtml\">Entité Géographique - finess {row['nofinesset']}</div>"""),
                     "name": str(row['rs']),
-                    "meta": {"lastUpdated": f"{row['datemaj']}T00:00:00Z"},
+                    "meta": dict(lastUpdated=f"{row['datemaj']}T00:00:00Z"),
                     "address": [dict(use="work", type="postal", country="France", line=addr_lines)]
                 }
 
@@ -365,8 +366,8 @@ class etab:
 
                 res = re.match(r"(\d+)\s(.*)", row['ligneacheminement'])
                 if res:
-                    postalCode, city = res.groups()
-                    data["address"][0]["postalCode"] = postalCode
+                    postal_code, city = res.groups()
+                    data["address"][0]["postalCode"] = postal_code
                     data["address"][0]["city"] = city
 
                 if str(row['telephone']) != "":
@@ -375,7 +376,7 @@ class etab:
                 try:
                     org = Organization(**data)
                 except Exception as e:
-                    self.logger.error("ERROR FHIR")
+                    self.logger.error("Error in data -> FHIR")
                     self.logger.error(pp.pformat(data))
                     self.logger.error(e)
                     sys.exit(1)
@@ -397,5 +398,5 @@ class etab:
                     fout.write(f"{loc.json()}\n")
 
                 except ValueError as e:
-                    self.logger.error(f"Erreur coordonnees {row['nofinesset']}|{coordxet}|{coordyet}|")
+                    self.logger.error(f"Error geo data  {row['nofinesset']}|{coordxet}|{coordyet}|")
                     self.logger.error(str(e))

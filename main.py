@@ -33,9 +33,10 @@ def main():
     )
     args = parser.parse_args()
 
-    gen = generator.etab()
+    gen = generator.Etab()
     gen.load_data(args.finessfile)
     gen.generate(args.outputdir, args.start, args.end)
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
