@@ -40,5 +40,11 @@ Chaque établissement est représenté par
 10682 out/etab90001-95541.ndjson
 ```
 
+Production des tar.gz
+``` 
+for f in *.ndjson; do tar czvf "${f%%.*}".tar.gz $f; done
+```
+
+
 # License
 [MIT](LICENSE) 
